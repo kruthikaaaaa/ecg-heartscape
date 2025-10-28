@@ -1,0 +1,4 @@
+project_id = "ciaupriiwxzzujdldhey"
+
+[functions.analyze-ecg]
+verify_jwt = false

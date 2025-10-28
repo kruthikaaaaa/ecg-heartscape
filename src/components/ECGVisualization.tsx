@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
-interface ECGVisualizationProps {
-  file: File;
+interface HeatmapZone {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  intensity: number;
 }
 
-export const ECGVisualization = ({ file }: ECGVisualizationProps) => {
+interface ECGVisualizationProps {
+  file: File;
+  heatmapZones?: HeatmapZone[];
+}
+
+export const ECGVisualization = ({ file, heatmapZones = [] }: ECGVisualizationProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -27,8 +36,13 @@ export const ECGVisualization = ({ file }: ECGVisualizationProps) => {
       // Draw the ECG image
       ctx.drawImage(img, 0, 0);
 
-      // Generate synthetic heatmap overlay
-      generateHeatmapOverlay(ctx, canvas.width, canvas.height);
+      // Draw heatmap overlay from zones
+      if (heatmapZones.length > 0) {
+        drawHeatmapZones(ctx, canvas.width, canvas.height, heatmapZones);
+      } else {
+        // Fallback to synthetic heatmap
+        generateHeatmapOverlay(ctx, canvas.width, canvas.height);
+      }
       
       setImageLoaded(true);
       URL.revokeObjectURL(url);
@@ -39,7 +53,46 @@ export const ECGVisualization = ({ file }: ECGVisualizationProps) => {
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [file]);
+  }, [file, heatmapZones]);
+
+  const drawHeatmapZones = (
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    zones: HeatmapZone[]
+  ) => {
+    ctx.globalAlpha = 0.4;
+    
+    zones.forEach(zone => {
+      // Map intensity to color: 0=blue, 0.5=yellow, 1.0=red
+      let color: string;
+      if (zone.intensity >= 0.7) {
+        color = "255, 50, 50"; // Red for critical
+      } else if (zone.intensity >= 0.4) {
+        color = "255, 200, 50"; // Yellow for warning
+      } else {
+        color = "50, 150, 255"; // Blue for normal
+      }
+      
+      const gradient = ctx.createRadialGradient(
+        zone.x * width,
+        zone.y * height,
+        0,
+        zone.x * width,
+        zone.y * height,
+        Math.max(zone.width, zone.height) * width * 0.5
+      );
+      
+      gradient.addColorStop(0, `rgba(${color}, ${zone.intensity})`);
+      gradient.addColorStop(0.5, `rgba(${color}, ${zone.intensity * 0.5})`);
+      gradient.addColorStop(1, `rgba(${color}, 0)`);
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+    });
+    
+    ctx.globalAlpha = 1.0;
+  };
 
   const generateHeatmapOverlay = (
     ctx: CanvasRenderingContext2D,
