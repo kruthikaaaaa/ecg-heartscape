@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Activity } from "lucide-react";
+import { ArrowLeft, Activity, BookOpen } from "lucide-react";
 import { ECGVisualization } from "@/components/ECGVisualization";
 import { MetricsPanel } from "@/components/MetricsPanel";
 
@@ -59,6 +59,24 @@ const Results = () => {
 
           <div className="space-y-6">
             <MetricsPanel />
+            
+            <Card className="p-6 shadow-card-elegant bg-gradient-medical-subtle">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">Need Guidance?</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Learn how to interpret your heatmap results and get recommendations for addressing critical findings.
+                </p>
+                <Button 
+                  onClick={() => navigate("/recommendations")} 
+                  className="w-full"
+                >
+                  View Recommendations
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
       </main>
