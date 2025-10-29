@@ -1,31 +1,73 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "@supabase/supabase-js"
+import typ      recommendations: [] as Array<string>,
+      confidence_score: data.confidenceScore || 0.8
+    }
+
+    // Generate recommendations based on analysis
+    const recommendations: string[] = [];
+    if (analysis.heart_rate < 60) {
+      recommendations.push('Consider consulting a doctor about bradycardia');
+    } else if (analysis.heart_rate > 100) {
+      recommendations.push('Consider consulting a doctor about tachycardia');
+    }
+
+    if (analysis.abnormalities.detected) {
+      recommendations.push('Schedule follow-up with cardiologist');
+    }
+
+    analysis.recommendations = recommendations; from "../../../src/integrations/supabase/types.ts"
+
+interface RequestBody {
+  fileData: string
+  fileName: string
+  userId: string
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { fileData, fileName } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const { fileData, fileName, userId } = await req.json();
+    const AI_API_KEY = Deno.env.get("AI_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     console.log('Analyzing ECG file:', fileName);
 
-    // Call Lovable AI with vision capabilities
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Create a new ECG record in the database
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: ecgRecord, error: ecgError } = await supabase
+      .from('ecg_records')
+      .insert({
+        user_id: userId,
+        file_name: fileName,
+        file_path: `ecg_data/${userId}/${fileName}`,
+        status: 'processing'
+      })
+      .select()
+      .single();
+
+    if (ecgError) throw ecgError;
+
+    // Call AI API for analysis
+    const response = await fetch("https://api.your-ai-service.com/v1/analyze", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -97,35 +139,45 @@ Return JSON only in this exact format:
     }
 
     const data = await response.json();
-    const analysisText = data.choices[0].message.content;
     
-    console.log('Raw AI response:', analysisText);
+    // Process the AI response and format it for our database
+    const analysis = {
+      heart_rate: data.heartRate || 75,
+      rhythm_type: data.rhythmType || 'Unknown',
+      abnormalities: {
+        detected: data.abnormalities?.length > 0 || false,
+        details: data.abnormalities || []
+      },
+      recommendations: [],
+      confidence_score: data.confidenceScore || 0.8
+    };
 
-    // Parse JSON from response
-    let analysis;
-    try {
-      // Try to extract JSON from markdown code blocks if present
-      const jsonMatch = analysisText.match(/```json\n([\s\S]*?)\n```/) || 
-                       analysisText.match(/```\n([\s\S]*?)\n```/);
-      
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[1]);
-      } else {
-        analysis = JSON.parse(analysisText);
-      }
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      // Return fallback data if parsing fails
-      analysis = {
-        heartRate: 75,
-        qrsDuration: 90,
-        stSegment: "Normal",
-        prInterval: 160,
-        qtInterval: 400,
-        abnormalities: ["Unable to parse detailed analysis"],
-        riskLevel: "warning",
-        heatmapZones: [
-          { x: 0.1, y: 0.3, width: 0.2, height: 0.4, intensity: 0.3 }
+    // Generate recommendations based on analysis
+    if (analysis.heart_rate < 60) {
+      analysis.recommendations.push('Consider consulting a doctor about bradycardia');
+    } else if (analysis.heart_rate > 100) {
+      analysis.recommendations.push('Consider consulting a doctor about tachycardia');
+    }
+
+    if (analysis.abnormalities.detected) {
+      analysis.recommendations.push('Schedule follow-up with cardiologist');
+    }
+
+    // Store analysis results in database
+    const { error: resultError } = await supabase
+      .from('analysis_results')
+      .insert({
+        ecg_record_id: ecgRecord.id,
+        ...analysis
+      });
+
+    if (resultError) throw resultError;
+
+    // Update ECG record status
+    await supabase
+      .from('ecg_records')
+      .update({ status: 'completed' })
+      .eq('id', ecgRecord.id);
         ]
       };
     }

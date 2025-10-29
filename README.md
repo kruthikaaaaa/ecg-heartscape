@@ -1,20 +1,26 @@
-# Welcome to your Lovable project
+# ECG HeartScape - ECG Analysis Application
 
-## Project info
+## Overview
 
-**URL**: https://lovable.dev/projects/9df3adab-3c18-4153-b517-60a1e5513afb
+ECG HeartScape is an advanced ECG analysis application that uses AI to detect heart abnormalities and provide health insights.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Real-time ECG data analysis
+- AI-powered heart abnormality detection
+- Secure user authentication
+- Detailed health insights and recommendations
+- Interactive visualization of ECG data
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/9df3adab-3c18-4153-b517-60a1e5513afb) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js 16 or higher
+- Docker Desktop (for local development)
+- Git
 
-**Use your preferred IDE**
+### Development Setup
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 

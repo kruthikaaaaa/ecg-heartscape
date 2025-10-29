@@ -1,17 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Heart, TrendingUp, AlertCircle, Clock } from "lucide-react";
+import type { ECGAnalysis } from "@/types/analysis";
 
 interface MetricsPanelProps {
-  analysis?: {
-    heartRate: number;
-    qrsDuration: number;
-    stSegment: string;
-    prInterval: number;
-    qtInterval: number;
-    abnormalities: string[];
-    riskLevel?: string;
-  };
+  analysis?: ECGAnalysis | null;
   loading?: boolean;
 }
 
@@ -40,29 +33,50 @@ export const MetricsPanel = ({ analysis, loading }: MetricsPanelProps) => {
       icon: Heart,
       label: "Heart Rate",
       value: `${analysis.heartRate} BPM`,
-      status: analysis.heartRate >= 60 && analysis.heartRate <= 100 ? "normal" : "warning",
-      description: analysis.heartRate >= 60 && analysis.heartRate <= 100 ? "Within normal range" : "Outside normal range",
+      status:
+        analysis.heartRate >= 60 && analysis.heartRate <= 100
+          ? "normal"
+          : "warning",
+      description:
+        analysis.heartRate >= 60 && analysis.heartRate <= 100
+          ? "Within normal range"
+          : "Outside normal range",
     },
     {
       icon: Activity,
       label: "QRS Duration",
       value: `${analysis.qrsDuration} ms`,
-      status: analysis.qrsDuration >= 80 && analysis.qrsDuration <= 120 ? "normal" : "warning",
-      description: analysis.qrsDuration >= 80 && analysis.qrsDuration <= 120 ? "Normal conduction" : "Abnormal conduction",
+      status:
+        analysis.qrsDuration >= 80 && analysis.qrsDuration <= 120
+          ? "normal"
+          : "warning",
+      description:
+        analysis.qrsDuration >= 80 && analysis.qrsDuration <= 120
+          ? "Normal conduction"
+          : "Abnormal conduction",
     },
     {
       icon: TrendingUp,
       label: "ST Segment",
       value: analysis.stSegment,
       status: analysis.stSegment === "Normal" ? "normal" : "warning",
-      description: analysis.stSegment === "Normal" ? "No abnormalities" : "Requires attention",
+      description:
+        analysis.stSegment === "Normal"
+          ? "No abnormalities"
+          : "Requires attention",
     },
     {
       icon: Clock,
       label: "PR Interval",
       value: `${analysis.prInterval} ms`,
-      status: analysis.prInterval >= 120 && analysis.prInterval <= 200 ? "normal" : "warning",
-      description: analysis.prInterval >= 120 && analysis.prInterval <= 200 ? "Normal timing" : "Abnormal timing",
+      status:
+        analysis.prInterval >= 120 && analysis.prInterval <= 200
+          ? "normal"
+          : "warning",
+      description:
+        analysis.prInterval >= 120 && analysis.prInterval <= 200
+          ? "Normal timing"
+          : "Abnormal timing",
     },
   ];
 
@@ -94,15 +108,18 @@ export const MetricsPanel = ({ analysis, loading }: MetricsPanelProps) => {
 
   const getRiskBadge = () => {
     if (!analysis.riskLevel) return null;
-    
+
     const variants: Record<string, "default" | "destructive" | "outline"> = {
       normal: "outline",
       warning: "default",
-      critical: "destructive"
+      critical: "destructive",
     };
-    
+
     return (
-      <Badge variant={variants[analysis.riskLevel] || "default"} className="mb-4">
+      <Badge
+        variant={variants[analysis.riskLevel] || "default"}
+        className="mb-4"
+      >
         Risk Level: {analysis.riskLevel.toUpperCase()}
       </Badge>
     );
@@ -111,18 +128,26 @@ export const MetricsPanel = ({ analysis, loading }: MetricsPanelProps) => {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Analysis Metrics</h3>
-      
+
       {getRiskBadge()}
-      
+
       {metrics.map((metric, index) => (
         <Card key={index} className="p-4 shadow-card-subtle">
           <div className="flex items-start gap-3">
             <div className={`p-2 rounded-lg ${getStatusBg(metric.status)}`}>
-              <metric.icon className={`h-5 w-5 ${getStatusColor(metric.status)}`} />
+              <metric.icon
+                className={`h-5 w-5 ${getStatusColor(metric.status)}`}
+              />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground mb-1">{metric.label}</p>
-              <p className={`text-lg font-semibold ${getStatusColor(metric.status)}`}>
+              <p className="text-sm text-muted-foreground mb-1">
+                {metric.label}
+              </p>
+              <p
+                className={`text-lg font-semibold ${getStatusColor(
+                  metric.status
+                )}`}
+              >
                 {metric.value}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -141,7 +166,10 @@ export const MetricsPanel = ({ analysis, loading }: MetricsPanelProps) => {
           </div>
           <ul className="space-y-1">
             {analysis.abnormalities.map((abnormality, index) => (
-              <li key={index} className="text-sm text-muted-foreground leading-relaxed">
+              <li
+                key={index}
+                className="text-sm text-muted-foreground leading-relaxed"
+              >
                 • {abnormality}
               </li>
             ))}
