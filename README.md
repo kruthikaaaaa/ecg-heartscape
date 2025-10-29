@@ -38,6 +38,19 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
+# Step 4: Start the development server.
+npm run dev
+
+## Localhost & Network Access
+
+Once the development server is running, you can access the app at:
+
+- Local: http://localhost:3000
+- Network: http://<your-ip-address>:3000
+
+Replace `<your-ip-address>` with your actual local network IP (shown in the terminal when you run `npm run dev`).
+
+
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
@@ -65,15 +78,5 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/9df3adab-3c18-4153-b517-60a1e5513afb) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
