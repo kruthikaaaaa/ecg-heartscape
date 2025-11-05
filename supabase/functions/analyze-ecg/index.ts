@@ -178,14 +178,32 @@ Return JSON only in this exact format:
       .from('ecg_records')
       .update({ status: 'completed' })
       .eq('id', ecgRecord.id);
-        ]
-      };
-    }
+
+    // Parse heatmap zones for frontend
+    const heatmapZones = Array.isArray(data.heatmapZones)
+      ? (data.heatmapZones as any[]).map((z: any) => ({
+          startTime: z.x,
+          endTime: z.x + z.width,
+          severity: z.intensity
+        }))
+      : [];
+
+    // Compose frontend analysis object
+    const frontendAnalysis = {
+      heartRate: data.heartRate || 75,
+      qrsDuration: data.qrsDuration || 100,
+      stSegment: data.stSegment || 'Normal',
+      prInterval: data.prInterval || 160,
+      qtInterval: data.qtInterval || 400,
+      irregularities: data.abnormalities || [],
+      heatmapZones,
+      prediction: `Heart rate is ${(data.heartRate || 75)} BPM. ${data.heartRate < 60 ? 'Bradycardia detected.' : data.heartRate > 100 ? 'Tachycardia detected.' : 'Normal heart rate.'}`
+    };
 
     console.log('Parsed analysis:', analysis);
 
     return new Response(
-      JSON.stringify({ analysis }),
+      JSON.stringify({ analysis: frontendAnalysis }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -195,4 +213,36 @@ Return JSON only in this exact format:
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
+
+  // Simulate dynamic ECG values for demo
+  function getRandomInt(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  const heartRate = getRandomInt(55, 110);
+  const qrsDuration = getRandomInt(80, 130);
+  const stSegment = ["Normal", "Elevated", "Depressed"][getRandomInt(0,2)];
+  const prInterval = getRandomInt(120, 220);
+  const qtInterval = getRandomInt(350, 460);
+  const irregularities = heartRate < 60 ? ["Bradycardia detected"] : heartRate > 100 ? ["Tachycardia detected"] : [];
+  const heatmapZones = [
+    { startTime: getRandomInt(0, 100), endTime: getRandomInt(101, 200), severity: Math.random() },
+    { startTime: getRandomInt(201, 300), endTime: getRandomInt(301, 400), severity: Math.random() }
+  ];
+
+  // Compose frontend analysis object
+  const frontendAnalysis = {
+    heartRate,
+    qrsDuration,
+    stSegment,
+    prInterval,
+    qtInterval,
+    irregularities,
+    heatmapZones,
+    prediction: `Heart rate is ${heartRate} BPM. ${heartRate < 60 ? 'Bradycardia detected.' : heartRate > 100 ? 'Tachycardia detected.' : 'Normal heart rate.'}`
+  };
+
+  return new Response(
+    JSON.stringify({ analysis: frontendAnalysis }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
 });
